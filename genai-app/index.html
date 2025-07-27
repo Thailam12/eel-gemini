@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>LâmBot 🤖 Gemini API Chat</title>
+  <style>
+    body { font-family: sans-serif; background: #1e1e1e; color: #eee; padding: 20px; max-width: 700px; margin: auto; }
+    input, button { font-size: 16px; padding: 10px; margin-top: 10px; width: 100%; border-radius: 5px; border: none; }
+    input[type="text"] { background: #333; color: #fff;margin-top: 400px; }
+    button { background: #0078d7; color: white; cursor: pointer; }
+    #chatlog { white-space: pre-wrap; background: #2d2d2d; padding: 15px; border-radius: 8px; margin-top: -500px; max-height: 300px; overflow-y: auto; }
+    code { background: #444; padding: 2px 4px; border-radius: 4px; }
+    h2 { text-align: center; margin-top: 100px; }
+    #topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: #111;
+      padding: 6px 15px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      z-index: 999;
+    }
+
+    #topbar button {
+      background: #0078d7;
+      color: white;
+      border: 500px;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #topbar button:hover {
+      background: #005bb5;
+    }
+  </style>
+</head>
+<body>
+  <h2>LâmBot 🤖 Gemini 1.5 Flash</h2>
+  <input type="text" id="prompt" placeholder="💬 Nhập tin nhắn...">
+  <button onclick="sendMessage()">Gửi</button>
+  <div id="chatlog"></div>
+  <div id="topbar">
+    <button id="login" onclick="location.href='signin.html'">Đăng nhập</button>
+  </div>
+
+  <script>
+    const API_KEY = "AIzaSyDsymWos5JIG7Ial7MlWc1-67DBz4Paubw"; // ⚠️ Key demo — thay bằng key của bạn
+    const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+    const chatlog = document.getElementById("chatlog");
+
+    function markdown(text) {
+      return text
+        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+        .replace(/\*(.*?)\*/g, "<em>$1</em>")
+        .replace(/`(.*?)`/g, "<code>$1</code>");
+    }
+
+    async function sendMessage() {
+      const prompt = document.getElementById("prompt").value.trim();
+      if (!prompt) return;
+
+      chatlog.innerHTML += `👦 <strong>Bạn:</strong> ${markdown(prompt)}\n`;
+      chatlog.innerHTML += `🤖 <strong>Gemini:</strong> Đang phản hồi...\n`;
+
+      const payload = {
+        contents: [{ parts: [{ text: prompt }] }]
+      };
+
+      try {
+        const res = await fetch(ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "<em>[Không có phản hồi]</em>";
+        chatlog.innerHTML = chatlog.innerHTML.replace("🤖 <strong>Gemini:</strong> Đang phản hồi...\n", `🤖 <strong>Gemini:</strong> ${markdown(reply)}\n\n`);
+        chatlog.scrollTop = chatlog.scrollHeight;
+      } catch (err) {
+        chatlog.innerHTML += `❌ <em>Lỗi gọi API:</em> ${err.message}\n`;
+      }
+    }
+
+  </script>
+</body>
+</html>
